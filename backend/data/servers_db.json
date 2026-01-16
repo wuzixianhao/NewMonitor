@@ -1,0 +1,19 @@
+{
+    "54.2": {
+        "server_id": "54.2",
+        "bmc_ip": "172.17.54.2",
+        "os_ip": "172.17.62.225",
+        "ssh_user": "root",
+        "ssh_password": "1",
+        "os_online": true,
+        "bmc_online": true,
+        "last_report_time": "-",
+        "reboot_status": "Deployed",
+        "reboot_phase": "已部署",
+        "reboot_loop": "-",
+        "memtest_status": "Idle",
+        "memtest_phase": "未部署",
+        "memtest_runtime_configured": "-",
+        "meminfo_status": "Idle"
+    }
+}
