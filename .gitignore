@@ -59,3 +59,4 @@ config.py
 logs
 data
 __pycache__
+.vite

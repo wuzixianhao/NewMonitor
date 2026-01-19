@@ -1,41 +1,112 @@
-<template>
-  <div class="card mt-4 shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title mb-3">添加测试机器</h5>
-      <div class="row g-2">
-        <div class="col-md-3">
-          <input v-model="form.server_id" class="form-control" placeholder="Server ID (e.g. S01)">
-        </div>
-        <div class="col-md-3">
-          <input v-model="form.os_ip" class="form-control" placeholder="OS IP">
-        </div>
-        <div class="col-md-3">
-          <input v-model="form.bmc_ip" class="form-control" placeholder="BMC IP">
-        </div>
-        <div class="col-md-3">
-          <button class="btn btn-success w-100" @click="handleSubmit">
-            <i class="bi bi-plus-lg"></i> 添加列表
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+<script lang="ts" setup>
+import { Form } from '@primevue/forms'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { useToast } from 'primevue/usetoast'
+import z from 'zod'
+import { addServerDialog } from '@/status'
 
-<script setup>
-import { ref } from 'vue'
+const emit = defineEmits<{
+  (
+    e: 'add',
+    server: {
+      server_id: string
+      os_ip: string
+      bmc_ip: string
+      ssh_user: string
+      ssh_password: string
+    },
+  ): void
+}>()
 
-const emit = defineEmits(['add'])
+const toast = useToast()
 
-const form = ref({
-  server_id: '', os_ip: '', bmc_ip: '', ssh_user: 'root', ssh_password: '1'
-})
+const resolver = zodResolver(
+  z.object({
+    server_id: z.string().min(1, { message: 'Server ID is required.' }),
+    os_ip: z
+      .string()
+      .min(7, { message: 'OS IP is required.' })
+      .regex(
+        /^(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})$/,
+        { message: 'Invalid IP address format.' },
+      ),
+    bmc_ip: z
+      .string()
+      .min(7, { message: 'BMC IP is required.' })
+      .regex(
+        /^(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})$/,
+        { message: 'Invalid IP address format.' },
+      ),
+    ssh_user: z.string().min(1, { message: 'SSH User is required.' }).default('root'),
+    ssh_password: z.string().min(1, { message: 'SSH Password is required.' }).default('1'),
+  }),
+)
 
-const handleSubmit = () => {
-  if (!form.value.server_id || !form.value.os_ip) return alert("请填写完整")
-  // 发送给父组件
-  emit('add', { ...form.value })
-  // 清空表单
-  form.value = { server_id: '', os_ip: '', bmc_ip: '', ssh_user: 'root', ssh_password: '1' }
+function onFormSubmit({ valid, values }) {
+  if (valid) {
+    emit('add', values)
+
+    toast.add({
+      severity: 'success',
+      summary: 'Form is submitted.',
+      life: 3000,
+    })
+  }
 }
 </script>
+
+<template>
+  <Dialog v-model:visible="addServerDialog" modal header="添加测试机器" :style="{ width: '25rem' }">
+    <Form v-slot="$form" :resolver class="flex flex-col gap-4 w-full" @submit="onFormSubmit">
+      <FormField v-slot="$field" name="server_id" class="flex flex-col gap-1">
+        <InputText name="server_id" type="text" placeholder="Server ID (e.g. S01)" fluid />
+        <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+          {{
+            $field.error?.message
+          }}
+        </Message>
+      </FormField>
+      <FormField v-slot="$field" name="os_ip" class="flex flex-col gap-1">
+        <InputText name="os_ip" type="text" placeholder="OS IP (e.g. 192.168.1.100)" fluid />
+        <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+          {{
+            $field.error?.message
+          }}
+        </Message>
+      </FormField>
+      <FormField v-slot="$field" name="bmc_ip" class="flex flex-col gap-1">
+        <InputText name="bmc_ip" type="text" placeholder="BMC IP (e.g. 192.168.1.101)" fluid />
+        <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+          {{
+            $field.error?.message
+          }}
+        </Message>
+      </FormField>
+      <FormField v-slot="$field" name="ssh_user" class="flex flex-col gap-1">
+        <InputText name="ssh_user" type="text" placeholder="SSH User (e.g. root)" fluid />
+        <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+          {{
+            $field.error?.message
+          }}
+        </Message>
+      </FormField>
+      <FormField v-slot="$field" name="ssh_password" class="flex flex-col gap-1">
+        <InputText
+          name="ssh_password"
+          type="password"
+          placeholder="SSH Password (e.g. 123456)"
+          fluid
+        />
+        <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+          {{
+            $field.error?.message
+          }}
+        </Message>
+      </FormField>
+      <div class="flex justify-end gap-2">
+        <Button label="取消" severity="secondary" @click="addServerDialog = false" />
+        <Button type="submit" label="添加" :disabled="!$form.valid" />
+      </div>
+    </Form>
+  </Dialog>
+</template>
