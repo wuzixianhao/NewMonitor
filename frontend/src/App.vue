@@ -13,7 +13,7 @@ const loadingState = ref({})
 const toast = useToast()
 
 const ws = ref<WebSocket | null>(null)
-const reconnectTimer = ref(null)
+const reconnectTimer = ref<number | null>(null)
 
 // 建立 WebSocket 连接
 function initWebSocket() {
@@ -211,7 +211,7 @@ async function addServer(serverData) {
   }
 }
 
-async function deleteServer(id) {
+async function deleteServer(id: string) {
   if (!confirm('确定删除吗？'))
     return
   try {

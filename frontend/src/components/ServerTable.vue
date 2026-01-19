@@ -13,7 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'action', payload: { server: any, action: string, payload?: any }): void
   (e: 'memtest-start', payload: { server: any, runtime: number }): void
-  (e: 'delete', server: any): void
+  (e: 'delete', server_id: string): void
   (e: 'refresh'): void
   (e: 'add-server', server: any): void
 }>()
@@ -366,7 +366,7 @@ function handleMemtestStart(srv) {
           severity="danger"
           size="small"
           :disabled="isLoading(data)"
-          @click="$emit('delete', data)"
+          @click="$emit('delete', data.server_id)"
         />
       </template>
     </Column>
