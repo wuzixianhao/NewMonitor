@@ -1,15 +1,16 @@
 <script lang="ts" setup>
+import type { Server } from './types'
 import axios from 'axios'
-import { useToast } from 'primevue'
+import { useToast } from 'primevue/usetoast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ServerTable from './components/ServerTable.vue'
 import { addServerDialog } from './status'
 
-const servers = ref([])
+const servers = ref<Server[]>([])
 const mode = ref('reboot')
 const backendStatus = ref('连接中...')
 const loadingData = ref(true)
-const loadingState = ref({})
+const loadingState = ref<Record<string, boolean>>({})
 const toast = useToast()
 
 const ws = ref<WebSocket | null>(null)
@@ -21,11 +22,11 @@ function initWebSocket() {
   // 这里的 /ws 与后端路由对应，Vite 代理会处理转发
   const wsUrl = `${protocol}//${window.location.host}/ws`
 
-  console.log(`[WebSocket] 正在连接: ${wsUrl}`)
+  console.warn(`[WebSocket] 正在连接: ${wsUrl}`)
   ws.value = new WebSocket(wsUrl)
 
   ws.value.onopen = () => {
-    console.log('[WebSocket] 已连接')
+    console.warn('[WebSocket] 已连接')
     backendStatus.value = '在线'
     if (reconnectTimer.value) {
       clearTimeout(reconnectTimer.value)
@@ -77,7 +78,7 @@ async function refreshStatus() {
 }
 
 // ✅✅✅ 修复参数接收 ✅✅✅
-async function startMemtest(srv, runtime) {
+async function startMemtest(srv: Server, runtime: string) {
   const sid = srv.server_id
 
   // 简单的参数校验
@@ -110,12 +111,12 @@ async function startMemtest(srv, runtime) {
 }
 
 // ✅✅✅ 终极修正版 handleAction ✅✅✅
-async function handleAction(srv, actionPath, payload = null) {
+async function handleAction(srv: Server, actionPath: string, payload: any = null) {
   const sid = srv.server_id
   let url = ''
 
   // 1. 打印调试信息 (帮助我们确诊)
-  console.log(`[Debug] Mode: ${mode.value}, Action: ${actionPath}`)
+  console.warn(`[Debug] Mode: ${mode.value}, Action: ${actionPath}`)
 
   // 2. 路由分发 (使用 switch case 更清晰，防止 if-else 混乱)
   if (actionPath.includes('/')) {
@@ -172,41 +173,40 @@ async function handleAction(srv, actionPath, payload = null) {
   }
   // 4. 执行请求
   loadingState.value[sid] = true
-  try {
-    const res = await axios.post(url, payload || {})
-
-    if (res.data.success) {
-      if (actionPath === 'save_config') {
-        refreshStatus()
+  axios.post(url, payload || {})
+    .then((res) => {
+      if (res.data.success) {
+        if (actionPath === 'save_config') {
+          refreshStatus()
+        }
+        else {
+        // 成功提示
+          console.warn('Success:', res.data)
+          toast.add({ severity: 'success', summary: `操作成功: ${res.data.message}` })
+          refreshStatus()
+        }
       }
       else {
-        // 成功提示
-        console.log('Success:', res.data)
-        toast.add({ severity: 'success', summary: `操作成功: ${res.data.message}` })
-        refreshStatus()
+        toast.add({ severity: 'error', summary: `操作失败: ${res.data.message}` })
       }
-    }
-    else {
-      toast.add({ severity: 'error', summary: `操作失败: ${res.data.message}` })
-    }
-  }
-  catch (e) {
-    console.error(e)
-    toast.add({ severity: 'error', summary: `请求异常: ${e.response ? e.response.status : e.message}\nURL: ${url}` })
-  }
-  finally {
-    loadingState.value[sid] = false
-  }
+    })
+    .catch((e) => {
+      console.error(e)
+      toast.add({ severity: 'error', summary: `请求异常: ${e.response ? e.response.status : e.message}\nURL: ${url}` })
+    })
+    .finally(() => {
+      loadingState.value[sid] = false
+    })
 }
 
-async function addServer(serverData) {
+async function addServer(serverData: any) {
   try {
     await axios.post('/servers/add', serverData)
     toast.add({ severity: 'success', summary: '添加成功' })
     addServerDialog.value = false
     refreshStatus()
   }
-  catch (e) {
+  catch {
     toast.add({ severity: 'error', summary: '添加失败' })
   }
 }

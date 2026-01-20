@@ -1,21 +1,22 @@
 <script lang="ts" setup>
+import type { Server } from '@/types'
 import { ref } from 'vue'
 import { addServerDialog } from '@/status'
 import AddServerForm from './AddServerForm.vue'
 
 const props = defineProps<{
-  servers: []
-  loadingState: { [key: string]: boolean }
+  servers: Server[]
+  loadingState: Record<string, boolean>
   loadingData: boolean
   backendStatus: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'action', payload: { server: any, action: string, payload?: any }): void
-  (e: 'memtest-start', payload: { server: any, runtime: number }): void
+  (e: 'action', server: Server, action: string, payload?: any): void
+  (e: 'memtestStart', server: Server, runtime: string): void
   (e: 'delete', server_id: string): void
   (e: 'refresh'): void
-  (e: 'add-server', server: any): void
+  (e: 'addServer', server: any): void
 }>()
 
 const mode = defineModel<string>('mode')
@@ -26,9 +27,9 @@ const modeOptions = ref([
   { label: '内存压测', value: 'memtest' },
   { label: '内存信息采集', value: 'meminfo' },
 ])
-const isLoading = srv => !!props.loadingState[srv.server_id]
+const isLoading = (srv: Server) => !!props.loadingState[srv.server_id]
 
-function isRealOffline(data) {
+function isRealOffline(data: Server) {
   if (!data.os_online) {
     if (data.reboot_status !== 'Running' && data.memtest_status !== 'Running') {
       return true
@@ -52,7 +53,7 @@ function getStatusTag(status: string) {
   }
 }
 
-function openACConfig(srv) {
+function openACConfig(srv: Server) {
   // 1. 输入 AC IP
   const ac_ip = prompt('请输入 AC 盒子 IP:', srv.ac_ip || '172.17.33.62')
   if (ac_ip === null)
@@ -76,10 +77,10 @@ function openACConfig(srv) {
   })
 }
 
-function handleMemtestStart(srv) {
+function handleMemtestStart(srv: Server) {
   const runtime = prompt('请输入压测时间 (秒)，默认 3600', '3600')
   if (runtime) {
-    emit('memtest-start', srv, runtime)
+    emit('memtestStart', srv, runtime)
   }
 }
 </script>
@@ -348,8 +349,10 @@ function handleMemtestStart(srv) {
                 <Button
                   icon="pi pi-download"
                   label="下载"
+                  as="a"
                   size="small"
-                  @click="open(`/servers/${data.server_id}/meminfo/download`)"
+                  :href="`/servers/${data.server_id}/meminfo/download`"
+                  target="_blank"
                 />
               </InputGroupAddon>
             </InputGroup>
@@ -371,6 +374,6 @@ function handleMemtestStart(srv) {
       </template>
     </Column>
 
-    <AddServerForm @add="$emit('add-server', $event)" />
+    <AddServerForm @add="$emit('addServer', $event)" />
   </DataTable>
 </template>
