@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import type { Server } from './types'
 import axios from 'axios'
+import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ServerTable from './components/ServerTable.vue'
 import { addServerDialog } from './status'
+
+const confirm = useConfirm()
 
 const servers = ref<Server[]>([])
 const mode = ref('reboot')
@@ -57,7 +60,7 @@ function initWebSocket() {
 
   ws.value.onerror = (error) => {
     console.error('[WebSocket] 错误:', error)
-    ws.value.close()
+    ws.value?.close()
   }
 }
 
@@ -212,15 +215,21 @@ async function addServer(serverData: any) {
 }
 
 async function deleteServer(id: string) {
-  if (!confirm('确定删除吗？'))
-    return
-  try {
-    await axios.delete(`/servers/delete/${id}`)
-    refreshStatus()
-  }
-  catch {
-    toast.add({ severity: 'error', summary: '删除失败' })
-  }
+  confirm.require({
+    message: '确定删除吗？',
+    header: '确认删除',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await axios.delete(`/servers/delete/${id}`)
+        refreshStatus()
+        toast.add({ severity: 'success', summary: '删除成功' })
+      }
+      catch {
+        toast.add({ severity: 'error', summary: '删除失败' })
+      }
+    },
+  })
 }
 
 onMounted(() => {
@@ -253,4 +262,5 @@ onUnmounted(() => {
     />
   </div>
   <Toast />
+  <ConfirmPopup />
 </template>
