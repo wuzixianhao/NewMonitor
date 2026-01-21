@@ -172,20 +172,12 @@ function handleMemtestStart(srv: Server) {
             <div class="small text-muted mt-1">
               {{ data.reboot_phase }}
             </div>
-            <div class="small text-secondary mt-1">
-              轮次: <b>{{ data.reboot_loop }}</b>
-            </div>
-          </Panel>
 
-          <div v-if="mode === 'acreboot'">
-            <Tag :severity="getStatusTag(data.reboot_status)">
-              {{ data.reboot_status }}
-            </Tag>
-            <div class="small text-muted mt-1">
-              {{ data.reboot_phase }}
+            <div v-if="mode === 'memtest'" class="small text-muted mt-1">
+              {{ data.memtest_phase }}
             </div>
 
-            <div class="small text-secondary mt-1">
+            <div v-if="data.reboot_loop" class="small text-secondary mt-1">
               轮次: <b>{{ data.reboot_loop }}</b>
             </div>
 
@@ -195,13 +187,7 @@ function handleMemtestStart(srv: Server) {
             <div v-else class="small text-danger mt-1">
               <i class="bi bi-exclamation-circle" /> 未配置 AC
             </div>
-          </div>
-
-          <div v-if="mode === 'memtest'">
-            <div class="small text-muted mt-1">
-              {{ data.memtest_phase }}
-            </div>
-          </div>
+          </Panel>
 
           <div class="text-muted" style="font-size: 10px">
             Update: {{ data.last_report_time }}
