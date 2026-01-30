@@ -1,20 +1,15 @@
 <script lang="ts" setup>
-import { Form } from '@primevue/forms'
+import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { useToast } from 'primevue/usetoast'
 import z from 'zod'
 import { addServerDialog } from '@/status'
+import type { Server } from '@/types'
 
 const emit = defineEmits<{
   (
     e: 'add',
-    server: {
-      server_id: string
-      os_ip: string
-      bmc_ip: string
-      ssh_user: string
-      ssh_password: string
-    },
+    server: Server,
   ): void
 }>()
 
@@ -42,7 +37,7 @@ const resolver = zodResolver(
   }),
 )
 
-function onFormSubmit({ valid, values }) {
+function onFormSubmit({ valid, values }: FormSubmitEvent<Server>) {
   if (valid) {
     emit('add', values)
 

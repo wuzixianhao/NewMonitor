@@ -92,27 +92,31 @@ function handleMemtestStart(srv: Server) {
         <span class="text-xl font-bold">
           <i class="pi pi-android text-[length:inherit]" /> 服务器自动化测试监控
         </span>
+        <SelectButton
+          v-model="mode"
+          :options="modeOptions"
+          option-label="label"
+          option-value="value"
+          :allow-empty="false"
+        />
         <div class="space-x-2">
-          <SelectButton
-            v-model="mode"
-            :options="modeOptions"
-            option-label="label"
-            option-value="value"
-            :allow-empty="false"
-          />
           <Tag :severity="backendStatus === '在线' ? 'success' : 'danger'">
             后端: {{ backendStatus }}
           </Tag>
           <Button
-            icon="pi pi-refresh"
-            :class="{
-              'animate-spin': loadingData,
-            }"
             rounded
             raised
             :disabled="loadingData"
             @click="$emit('refresh')"
-          />
+          >
+            <template #icon>
+              <span
+                class="p-button-icon pi pi-refresh" :class="{
+                  'animate-spin': loadingData,
+                }"
+              />
+            </template>
+          </Button>
           <Button
             icon="pi pi-plus"
             raised
@@ -157,7 +161,7 @@ function handleMemtestStart(srv: Server) {
           </div>
         </div>
         <div v-else class="space-y-0.5">
-          <Panel collapsed toggleable>
+          <Panel collapsed toggleable class="space-y-1">
             <template #header>
               <div class="flex gap-2">
                 <Tag v-if="data.memtest_status" :severity="getStatusTag(data.memtest_status)">
@@ -166,25 +170,29 @@ function handleMemtestStart(srv: Server) {
                 <Tag v-if="data.reboot_status" :severity="getStatusTag(data.reboot_status)">
                   {{ data.reboot_status }}
                 </Tag>
+                <Tag v-if="data.reboot_loop && data.reboot_phase !== '等待进程启动...'" severity="info">
+                  <template #icon>
+                    <i
+                      v-if="data.reboot_phase !== '等待进程启动...'"
+                      class="p-tag-icon pi pi-sync animate-spin"
+                    />
+                  </template>
+                  {{ data.reboot_loop }}
+                </Tag>
+                <Tag v-if="data.reboot_phase" severity="secondary">
+                  {{ data.reboot_phase }}
+                </Tag>
               </div>
             </template>
 
-            <div class="small text-muted mt-1">
-              {{ data.reboot_phase }}
-            </div>
-
-            <div v-if="mode === 'memtest'" class="small text-muted mt-1">
+            <div v-if="mode === 'memtest'" class="small text-muted">
               {{ data.memtest_phase }}
             </div>
 
-            <div v-if="data.reboot_loop" class="small text-secondary mt-1">
-              轮次: <b>{{ data.reboot_loop }}</b>
-            </div>
-
-            <div v-if="data.ac_ip" class="small text-primary mt-1">
+            <div v-if="data.ac_ip" class="small text-primary">
               AC: {{ data.ac_ip }} (口:{{ data.ac_socket }})
             </div>
-            <div v-else class="small text-danger mt-1">
+            <div v-else class="small text-danger">
               <i class="bi bi-exclamation-circle" /> 未配置 AC
             </div>
           </Panel>

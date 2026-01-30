@@ -106,7 +106,7 @@ async function startMemtest(srv: Server, runtime: string) {
   }
   catch (e) {
     console.error(e)
-    toast.add({ severity: 'error', summary: `请求异常: ${e.message}` })
+    toast.add({ severity: 'error', summary: `请求异常: ${e}` })
   }
   finally {
     loadingState.value[sid] = false
